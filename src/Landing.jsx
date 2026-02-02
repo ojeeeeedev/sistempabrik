@@ -10,26 +10,32 @@ export default function Landing() {
       </div>
 
       {/* Header */}
-      <header className="w-full py-4 px-6 md:px-12 z-20 bg-white shadow-lg flex items-center justify-between">
+      <header className="w-full py-3 px-4 md:py-4 md:px-12 z-20 bg-white shadow-lg flex items-center justify-between">
         {/* Left: Logo & Company Name */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex items-center gap-4"
+          className="flex items-center gap-3 md:gap-4"
         >
-          <img src="/logo_pt.png" alt="PT Utama Korindah Logo" className="h-18 w-auto object-contain" />
-          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-[#113b39]">
-            PT. UTAMA KORINDAH
-          </h1>
+          <img src="/logo_pt.png" alt="PT Utama Korindah Logo" className="h-10 md:h-16 w-auto object-contain" />
+          <div className="flex flex-col">
+            <h1 className="text-lg md:text-2xl font-extrabold tracking-tight text-[#113b39] leading-tight">
+              PT. UTAMA KORINDAH
+            </h1>
+            {/* Online Portal text for mobile - visible below name */}
+            <h2 className="text-[10px] md:hidden font-bold text-slate-400 tracking-[0.2em] uppercase">
+              Online Portal
+            </h2>
+          </div>
         </motion.div>
 
-        {/* Right: H2 Content */}
+        {/* Right: H2 Content for Desktop */}
         <motion.h2 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-sm md:text-2xl font-semibold text-slate-500 tracking-wider uppercase hidden md:block"
+          className="text-sm md:text-xl font-semibold text-slate-500 tracking-wider uppercase hidden md:block"
         >
           Online Portal
         </motion.h2>
