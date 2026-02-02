@@ -1,7 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 export default function Landing() {
+  const [statusColor, setStatusColor] = useState('bg-slate-500');
+  const [statusText, setStatusText] = useState('Checking Status...');
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        // Try Server-Side API first (Better for 1033 errors)
+        const apiRes = await fetch('/api/status');
+        if (apiRes.ok) {
+           const data = await apiRes.json();
+           // FIX: Access .current property as API now returns { current: {...}, history: [...] }
+           const monitors = data.current || {};
+           const values = Object.values(monitors);
+           
+           if (values.length === 0) throw new Error("No monitor data");
+
+           const failures = values.filter(d => d.status === 'outage').length;
+
+           if (failures === 0) {
+             setStatusColor('bg-emerald-700');
+             setStatusText('All Systems Operational');
+           } else if (failures === values.length) {
+             setStatusColor('bg-red-700');
+             setStatusText('All Services Down');
+           } else {
+             setStatusColor('bg-amber-600');
+             setStatusText('Partial Service');
+           }
+           return;
+        }
+
+        throw new Error("API failed");
+      } catch (e) {
+        // Fallback: Client-Side check
+        // Using CORS mode. If the server is up but doesn't support CORS, this will fail (Outage).
+        // If the server is down (1033/5xx), this will also fail (Outage).
+        // This is a strict check suitable for "System Status" where we prefer False Negative (saying down when up)
+        // over False Positive (saying up when down) for the user to investigate.
+        const results = await Promise.allSettled([
+          fetch('https://inventory.utamakorindah.com', { mode: 'cors', method: 'HEAD' }),
+          fetch('https://cctv.utamakorindah.com', { mode: 'cors', method: 'HEAD' })
+        ]);
+
+        const failures = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;
+
+        if (failures === 0) {
+          setStatusColor('bg-emerald-700');
+          setStatusText('All Systems Operational');
+        } else if (failures === results.length) {
+          setStatusColor('bg-red-700');
+          setStatusText('All Services Down');
+        } else {
+          setStatusColor('bg-amber-600');
+          setStatusText('Partial Service');
+        }
+      }
+    };
+    
+    checkStatus();
+  }, []);
+
   return (
     <div className="h-screen bg-[#0a2423] text-slate-200 flex flex-col overflow-hidden relative selection:bg-[#113b39]/50">
       
@@ -106,8 +168,14 @@ export default function Landing() {
             </div>
 
             {/* Copyright */}
-            <div className="col-span-2 md:col-span-1 flex flex-col gap-1 md:gap-3 md:text-right border-t border-white/5 pt-2 md:border-none md:pt-0">
+            <div className="col-span-2 md:col-span-1 flex flex-col gap-3 md:text-right border-t border-white/5 pt-2 md:border-none md:pt-0 items-start md:items-end">
               <p>&copy; {new Date().getFullYear()} PT. UTAMA KORINDAH.<br className="hidden md:block" /> All rights reserved.</p>
+              
+              {/* Status Button */}
+              <Link to="/status" className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 transition-all text-xs font-semibold text-white group shadow-lg ${statusColor} hover:brightness-110`}>
+                <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-all"></span>
+                {statusText}
+              </Link>
             </div>
           </motion.div>
         </div>
