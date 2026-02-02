@@ -10,7 +10,7 @@ export default function Landing() {
       </div>
 
       {/* Header */}
-      <header className="w-full py-3 px-4 md:py-4 md:px-12 z-20 bg-white shadow-lg flex items-center justify-between">
+      <header className="w-full py-3 px-4 md:py-4 md:px-12 z-20 bg-white shadow-lg flex items-center justify-between sticky top-0">
         {/* Left: Logo & Company Name */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
@@ -42,7 +42,7 @@ export default function Landing() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center w-full px-4 z-10 pb-20">
+      <main className="flex-grow flex items-center justify-center w-full px-4 z-10 pb-20 mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
           
           {/* Card: Akses CCTV */}
