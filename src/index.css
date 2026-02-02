@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --color-brand: #113b39;
+  --color-brand-light: #1a5c59;
+  --color-brand-dark: #0a2423;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    @apply antialiased bg-[#0a2423];
+  }
+}
