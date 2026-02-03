@@ -41,9 +41,12 @@ export default function Landing() {
         // If the server is down (1033/5xx), this will also fail (Outage).
         // This is a strict check suitable for "System Status" where we prefer False Negative (saying down when up)
         // over False Positive (saying up when down) for the user to investigate.
+        const inventoryUrl = import.meta.env.DEV ? '/api-proxy/inventory' : 'https://inventory.utamakorindah.com';
+        const cctvUrl = import.meta.env.DEV ? '/api-proxy/cctv' : 'https://cctv.utamakorindah.com';
+
         const results = await Promise.allSettled([
-          fetch('https://inventory.utamakorindah.com', { mode: 'cors', method: 'HEAD' }),
-          fetch('https://cctv.utamakorindah.com', { mode: 'cors', method: 'HEAD' })
+          fetch(inventoryUrl, { mode: 'cors', method: 'HEAD' }),
+          fetch(cctvUrl, { mode: 'cors', method: 'HEAD' })
         ]);
 
         const failures = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;
