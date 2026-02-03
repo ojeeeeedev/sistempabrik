@@ -107,11 +107,11 @@ export default async function handler(req, res) {
             }
         }
 
-        // 2. Throttling: Only log if last entry is > 5 minutes old
+        // 2. Throttling: Only log if last entry is > 58 minutes old
         // We look at the last entry in the history array.
         const lastEntry = history.length > 0 ? history[history.length - 1] : null;
         const now = new Date();
-        const shouldLog = !lastEntry || (now.getTime() - new Date(lastEntry.timestamp).getTime() > 5 * 60 * 1000);
+        const shouldLog = !lastEntry || (now.getTime() - new Date(lastEntry.timestamp).getTime() > 58 * 60 * 1000);
 
         if (shouldLog) {
             // Create new log entries from the current check

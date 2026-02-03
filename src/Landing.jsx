@@ -11,7 +11,8 @@ export default function Landing() {
       try {
         // Try Server-Side API first (Better for 1033 errors)
         const apiRes = await fetch('/api/status');
-        if (apiRes.ok) {
+        const contentType = apiRes.headers.get("content-type");
+        if (apiRes.ok && contentType && contentType.indexOf("application/json") !== -1) {
            const data = await apiRes.json();
            // FIX: Access .current property as API now returns { current: {...}, history: [...] }
            const monitors = data.current || {};
@@ -34,30 +35,12 @@ export default function Landing() {
            return;
         }
 
-        throw new Error("API failed");
+        throw new Error("API failed or returned non-JSON");
       } catch (e) {
-        // Fallback: Client-Side check
-        // Using CORS mode. If the server is up but doesn't support CORS, this will fail (Outage).
-        // If the server is down (1033/5xx), this will also fail (Outage).
-        // This is a strict check suitable for "System Status" where we prefer False Negative (saying down when up)
-        // over False Positive (saying up when down) for the user to investigate.
-        const results = await Promise.allSettled([
-          fetch('https://inventory.utamakorindah.com', { mode: 'cors', method: 'HEAD' }),
-          fetch('https://cctv.utamakorindah.com', { mode: 'cors', method: 'HEAD' })
-        ]);
-
-        const failures = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;
-
-        if (failures === 0) {
-          setStatusColor('bg-emerald-700');
-          setStatusText('All Systems Operational');
-        } else if (failures === results.length) {
-          setStatusColor('bg-red-700');
-          setStatusText('All Services Down');
-        } else {
-          setStatusColor('bg-amber-600');
-          setStatusText('Partial Service');
-        }
+        // API Failed
+        console.warn("Status check failed:", e); // Changed to warn
+        setStatusColor('bg-slate-500');
+        setStatusText('Status Unavailable');
       }
     };
     

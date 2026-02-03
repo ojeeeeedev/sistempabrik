@@ -21,31 +21,21 @@ export default function StatusPage() {
       // Perform Check
       try {
         const apiRes = await fetch('/api/status');
-        if (apiRes.ok) {
+        const contentType = apiRes.headers.get("content-type");
+        if (apiRes.ok && contentType && contentType.indexOf("application/json") !== -1) {
             const data = await apiRes.json();
             currentStatus = data.current;
             apiHistory = data.history || [];
         } else {
-            throw new Error("API not available");
+            throw new Error("API not available or non-JSON response");
         }
       } catch (e) {
-        // Fallback Client-Side
+        // API Failed - Set all monitors to unknown/error state
+        console.warn("Status API unreachable:", e);
         for (const monitor of monitors) {
-            try {
-                const res = await fetch(monitor.url, { mode: 'cors', method: 'HEAD' });
-                if (res.status >= 520 && res.status <= 530) {
-                     currentStatus[monitor.id] = { status: 'outage', error: `Cloudflare Error ${res.status}` };
-                } else if (!res.ok) {
-                     currentStatus[monitor.id] = { status: 'outage', error: `Error ${res.status}` };
-                } else {
-                     currentStatus[monitor.id] = { status: 'operational', error: null };
-                }
-            } catch (error) {
-                currentStatus[monitor.id] = { status: 'outage', error: "Connection Failed" };
-            }
+            currentStatus[monitor.id] = { status: 'checking', error: "Status Service Unavailable" };
         }
-        // In fallback mode, we have no history
-        apiHistory = []; 
+        apiHistory = [];
       }
 
       // Update State
