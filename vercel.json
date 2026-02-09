@@ -1,7 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/.*).*)",
+      "source": "/api-proxy/inventory",
+      "destination": "https://inventory.utamakorindah.com/"
+    },
+    {
+      "source": "/api-proxy/cctv",
+      "destination": "https://cctv.utamakorindah.com/"
+    },
+    {
+      "source": "/((?!api/.*|api-proxy/.*).*)",
       "destination": "/index.html"
     }
   ],

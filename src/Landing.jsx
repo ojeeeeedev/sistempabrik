@@ -13,8 +13,8 @@ export default function Landing() {
         // This is a strict check suitable for "System Status" where we prefer False Negative (saying down when up)
         // over False Positive (saying up when down) for the user to investigate.
         const results = await Promise.allSettled([
-          fetch('https://inventory.utamakorindah.com', { mode: 'cors', method: 'HEAD' }),
-          fetch('https://cctv.utamakorindah.com', { mode: 'cors', method: 'HEAD' })
+          fetch('/api-proxy/inventory', { method: 'HEAD' }),
+          fetch('/api-proxy/cctv', { method: 'HEAD' })
         ]);
 
         const failures = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;

@@ -28,10 +28,8 @@ export default function StatusPage() {
       // Client-Side Check
       for (const monitor of monitors) {
           try {
-              const checkUrl = import.meta.env.DEV 
-                  ? (monitor.id === 'inventory' ? '/api-proxy/inventory' : '/api-proxy/cctv')
-                  : monitor.url;
-              const res = await fetch(checkUrl, { mode: 'cors', method: 'HEAD' });
+              const checkUrl = monitor.id === 'inventory' ? '/api-proxy/inventory' : '/api-proxy/cctv';
+              const res = await fetch(checkUrl, { method: 'HEAD' });
               if (res.status >= 520 && res.status <= 530) {
                     currentStatus[monitor.id] = { status: 'outage', error: `Cloudflare Error ${res.status}` };
               } else if (!res.ok) {
