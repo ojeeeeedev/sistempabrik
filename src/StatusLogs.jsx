@@ -9,17 +9,12 @@ export default function StatusLogs() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const apiRes = await fetch('/api/status');
-        if (apiRes.ok) {
-           const data = await apiRes.json();
-           // History is typically ordered oldest -> newest by the API logic (append).
-           // We want newest first for the table.
-           if (data.history) {
-             setLogs([...data.history].reverse());
-           }
+        const storedLogs = localStorage.getItem('status_logs');
+        if (storedLogs) {
+            setLogs(JSON.parse(storedLogs));
         }
       } catch (e) {
-        console.error("Failed to load logs from API", e);
+        console.error("Failed to load logs from localStorage", e);
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const monitors = [
@@ -11,39 +11,37 @@ export default function StatusPage() {
   const [monitorData, setMonitorData] = useState({});
   const [globalStatus, setGlobalStatus] = useState('checking'); 
   const [lastChecked, setLastChecked] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastType, setToastType] = useState('success');
 
-  useEffect(() => {
-    const checkStatus = async () => {
+  const checkStatus = useCallback(async (manual) => {
+      const isManual = manual === true || (typeof manual === 'object' && manual !== null);
+      setIsRefreshing(true);
+      
+      if (isManual) {
+        // Add a 2 second delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
       let currentStatus = {};
       
-      // Perform Check
-      try {
-        const apiRes = await fetch('/api/status');
-        if (apiRes.ok) {
-            const data = await apiRes.json();
-            currentStatus = data.current;
-        } else {
-            throw new Error("API not available");
-        }
-      } catch (e) {
-        // Fallback Client-Side
-        for (const monitor of monitors) {
-            try {
-                const checkUrl = import.meta.env.DEV 
-                    ? (monitor.id === 'inventory' ? '/api-proxy/inventory' : '/api-proxy/cctv')
-                    : monitor.url;
-                const res = await fetch(checkUrl, { mode: 'cors', method: 'HEAD' });
-                if (res.status >= 520 && res.status <= 530) {
-                     currentStatus[monitor.id] = { status: 'outage', error: `Cloudflare Error ${res.status}` };
-                } else if (!res.ok) {
-                     currentStatus[monitor.id] = { status: 'outage', error: `Error ${res.status}` };
-                } else {
-                     currentStatus[monitor.id] = { status: 'operational', error: null };
-                }
-            } catch (error) {
-                currentStatus[monitor.id] = { status: 'outage', error: "Connection Failed" };
-            }
-        }
+      // Client-Side Check
+      for (const monitor of monitors) {
+          try {
+              const checkUrl = import.meta.env.DEV 
+                  ? (monitor.id === 'inventory' ? '/api-proxy/inventory' : '/api-proxy/cctv')
+                  : monitor.url;
+              const res = await fetch(checkUrl, { mode: 'cors', method: 'HEAD' });
+              if (res.status >= 520 && res.status <= 530) {
+                    currentStatus[monitor.id] = { status: 'outage', error: `Cloudflare Error ${res.status}` };
+              } else if (!res.ok) {
+                    currentStatus[monitor.id] = { status: 'outage', error: `Error ${res.status}` };
+              } else {
+                    currentStatus[monitor.id] = { status: 'operational', error: null };
+              }
+          } catch (error) {
+              currentStatus[monitor.id] = { status: 'outage', error: "Connection Failed" };
+          }
       }
 
       // Update State
@@ -56,12 +54,37 @@ export default function StatusPage() {
       if (values.every(d => d.status === 'operational')) gStatus = 'operational';
       else if (values.every(d => d.status === 'outage')) gStatus = 'outage';
       setGlobalStatus(gStatus);
-    };
+      
+      // Save to LocalStorage
+      const logEntries = Object.entries(currentStatus).map(([id, data]) => ({
+          timestamp: new Date().toISOString(),
+          system: monitors.find(m => m.id === id)?.name || id,
+          status: data.status,
+          error: data.error
+      }));
+      
+      try {
+          const existingLogs = JSON.parse(localStorage.getItem('status_logs') || '[]');
+          const updatedLogs = [...logEntries, ...existingLogs].slice(0, 100); 
+          localStorage.setItem('status_logs', JSON.stringify(updatedLogs));
+      } catch (e) {
+          console.error("Failed to save logs to localStorage", e);
+      }
 
+      setIsRefreshing(false);
+
+      if (isManual) {
+          setToastType(gStatus === 'operational' ? 'success' : 'error');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+      }
+    }, []);
+
+  useEffect(() => {
     checkStatus();
     const interval = setInterval(checkStatus, 300000); // 5 mins
     return () => clearInterval(interval);
-  }, []);
+  }, [checkStatus]);
 
   return (
     <div className="min-h-screen bg-black text-slate-200 font-sans selection:bg-[#113b39]/50">
@@ -97,9 +120,22 @@ export default function StatusPage() {
                globalStatus === 'checking' ? 'Checking Systems...' : 
                globalStatus === 'degraded' ? 'Partial Service' : 'System Outage'}
             </h1>
-            <p className="text-xs md:text-sm text-slate-400">
-                {lastChecked ? `Last checked: ${lastChecked.toLocaleTimeString()}` : 'Initializing monitor...'}
-            </p>
+            <div className="flex items-center gap-3">
+                <p className="text-xs md:text-sm text-slate-400">
+                    {lastChecked ? `Last checked: ${lastChecked.toLocaleTimeString()}` : 'Initializing monitor...'}
+                </p>
+                <button 
+                    onClick={checkStatus} 
+                    disabled={isRefreshing}
+                    className={`cursor-pointer group flex items-center gap-0 hover:gap-2 px-2 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-300 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    title="Refresh Status"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-slate-400 group-hover:text-white transition-colors ${isRefreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6" /><path d="M1 20v-6h6" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
+                    <span className="max-w-0 overflow-hidden group-hover:max-w-[100px] transition-all duration-300 text-xs font-medium text-slate-300 group-hover:text-white whitespace-nowrap">
+                        Refresh Status
+                    </span>
+                </button>
+            </div>
           </div>
           <div className={`
             h-4 w-4 md:h-6 md:w-6 rounded-full shrink-0 shadow-[0_0_20px_currentColor] animate-pulse
@@ -136,6 +172,26 @@ export default function StatusPage() {
             </div>
         </div>
 
+        {/* Toast Notification */}
+        <AnimatePresence>
+            {showToast && (
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-50 ${
+                        toastType === 'success' ? 'bg-white text-slate-900' : 'bg-red-900 text-white border border-red-700'
+                    }`}
+                >
+                    {toastType === 'success' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    )}
+                    <span className="font-semibold text-sm">{toastType === 'success' ? 'System Status Updated' : 'Issues Detected'}</span>
+                </motion.div>
+            )}
+        </AnimatePresence>
       </div>
     </div>
   );
