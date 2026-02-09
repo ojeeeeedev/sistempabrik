@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export default function Landing() {
   const [statusColor, setStatusColor] = useState('bg-slate-500');
-  const [statusText, setStatusText] = useState('Checking Status...');
+  const [statusText, setStatusText] = useState('Checking...');
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -21,13 +21,13 @@ export default function Landing() {
 
         if (failures === 0) {
           setStatusColor('bg-emerald-700');
-          setStatusText('All Systems Operational');
+          setStatusText('Operational');
         } else if (failures === results.length) {
           setStatusColor('bg-red-700');
-          setStatusText('All Services Down');
+          setStatusText('Outage');
         } else {
           setStatusColor('bg-amber-600');
-          setStatusText('Partial Service');
+          setStatusText('Degraded');
         }
     };
     
@@ -142,7 +142,12 @@ export default function Landing() {
               <p>&copy; {new Date().getFullYear()} PT. UTAMA KORINDAH.<br className="hidden md:block" /> All rights reserved.</p>
               
               {/* Status Button */}
-              <Link to="/status" className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 transition-all text-xs font-semibold text-white group shadow-lg ${statusColor} hover:brightness-110`}>
+              <Link to="/status" className={`
+                absolute bottom-full right-6 mb-6 z-50 shadow-2xl
+                md:static md:mb-0 md:z-auto md:shadow-lg
+                inline-flex items-center gap-2 px-4 py-2 md:py-1.5 rounded-full border border-white/10 transition-all text-xs font-semibold text-white group 
+                ${statusColor} hover:brightness-110
+              `}>
                 <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-all"></span>
                 {statusText}
               </Link>

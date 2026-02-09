@@ -125,11 +125,20 @@ export default function StatusPage() {
                 <button 
                     onClick={checkStatus} 
                     disabled={isRefreshing}
-                    className={`cursor-pointer group flex items-center gap-0 hover:gap-2 px-2 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-300 ${isRefreshing ? 'animate-pulse' : ''}`}
+                    className={`
+                        cursor-pointer group flex items-center 
+                        fixed bottom-6 right-6 z-50 px-4 py-3 gap-2 rounded-full bg-slate-800 border border-slate-700 shadow-2xl
+                        md:static md:z-auto md:px-2 md:py-2 md:gap-0 md:hover:gap-2 md:bg-white/5 md:hover:bg-white/10 md:border-white/10 md:shadow-none
+                        transition-all duration-300 
+                        ${isRefreshing ? 'animate-pulse' : ''}
+                    `}
                     title="Refresh Status"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-slate-400 group-hover:text-white transition-colors ${isRefreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6" /><path d="M1 20v-6h6" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
-                    <span className="max-w-0 overflow-hidden group-hover:max-w-[100px] transition-all duration-300 text-xs font-medium text-slate-300 group-hover:text-white whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-white md:text-slate-400 md:group-hover:text-white transition-colors ${isRefreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6" /><path d="M1 20v-6h6" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
+                    <span className="md:hidden text-sm font-medium text-white">
+                        Refresh
+                    </span>
+                    <span className="hidden md:block max-w-0 overflow-hidden group-hover:max-w-[100px] transition-all duration-300 text-xs font-medium text-slate-300 group-hover:text-white whitespace-nowrap">
                         Refresh Status
                     </span>
                 </button>
@@ -186,7 +195,7 @@ export default function StatusPage() {
                     ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     )}
-                    <span className="font-semibold text-sm">{toastType === 'success' ? 'System Status Updated' : 'Issues Detected'}</span>
+                    <span className="font-semibold text-xs text-wrap: pretty">{toastType === 'success' ? 'Update Successful' : 'Issues Detected'}</span>
                 </motion.div>
             )}
         </AnimatePresence>
